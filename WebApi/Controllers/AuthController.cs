@@ -1,17 +1,15 @@
-﻿using AutoMapper;
-using BusinessLogic.DTO;
+﻿using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
-using DataAccess.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BreakfastPlan.Controllers
+namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-       
+
         public AuthController(IUserService userService)
         {
             _userService = userService;
