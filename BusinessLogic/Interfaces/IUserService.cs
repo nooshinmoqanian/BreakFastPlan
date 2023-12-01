@@ -10,7 +10,10 @@ namespace BusinessLogic.Interfaces
 {
     public interface IUserService
     {
-       Task<RegistrationResult> RegisterUser(RegisterDto registerDto);
+       Task<Result> RegisterUser(RegisterDto registerDto);
+       Task<Result> LoginUser(LoginDto loginDto);
+
         string GenerateJwtToken(Users user);
+        string CreateRefreshToken();
     }
 }
