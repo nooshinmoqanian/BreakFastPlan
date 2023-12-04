@@ -4,6 +4,7 @@ using BusinessLogic.Interfaces;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,23 +25,20 @@ namespace BusinessLogic.Services
 
         public async Task<bool> CheckUserAuthenticationAsync(LoginDto loginDto)
         {
-            if (loginDto.username != null)
+            if (!string.IsNullOrEmpty(loginDto.username))
             {
                 var findUser = await _userRepository.GetByNameAsync(loginDto.username);
 
-                if (findUser != null)
+                if (findUser != null && !string.IsNullOrEmpty(loginDto.password))
                 {
-                    if (loginDto.password != null)
-                    {
-                        var verifyPass = BCrypt.Net.BCrypt.Verify(loginDto.password, findUser.Password);
+                    var verifyPass = BCrypt.Net.BCrypt.Verify(loginDto.password, findUser.Password);
 
-                        if (verifyPass) return true;
-                    }
+                    return verifyPass;
                 }
             }
+
             return false;
         }
-
         public async Task<Result> LoginUser(LoginDto loginDto)
         {
             if (loginDto != null)
