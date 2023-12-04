@@ -1,11 +1,4 @@
 ﻿using AutoMapper;
-using BusinessLogic.DTO;
-using DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Mapping
 {
@@ -13,8 +6,7 @@ namespace BusinessLogic.Mapping
     {
         public UserProfile()
         {
-            CreateMap<Users, RegisterDto>().ReverseMap();
-            CreateMap<Users, LoginDto>().ReverseMap();
+           
         }
     }
 }
