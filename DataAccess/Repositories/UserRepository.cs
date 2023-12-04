@@ -61,6 +61,17 @@ namespace DataAccess.Repositories
             return user;
         }
 
+        public async Task<Users> GetByNameAsync(string name)
+        {
+            var user = await _context.User
+                             .SingleOrDefaultAsync(u => u.Username == name);
+
+            if (user == null)
+                return new Users { };
+
+            return user;
+        }
+
         public async Task<Result> UpdateAsync(Users entity)
         {
             _context.User.Update(entity);

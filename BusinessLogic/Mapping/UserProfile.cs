@@ -9,6 +9,7 @@ namespace BusinessLogic.Mapping
         public UserProfile()
         {
            CreateMap<Users, RegisterDto>().ReverseMap();
+           CreateMap<Users, LoginDto>().ReverseMap();
         }
     }
 }

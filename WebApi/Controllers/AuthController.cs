@@ -34,5 +34,19 @@ namespace WebApi.Controllers
 
             return BadRequest(ModelState);
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var LoginResult = await _userService.LoginUser(loginDto);
+
+            if (LoginResult != null)
+                return Ok(LoginResult);
+
+            return BadRequest(ModelState);
+        }
     }
 }
