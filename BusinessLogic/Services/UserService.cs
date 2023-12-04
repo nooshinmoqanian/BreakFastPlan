@@ -16,10 +16,12 @@ namespace BusinessLogic.Services
     public class UserService : IUserService
     {
         private readonly IRepositories<Users> _userRepository;
+        private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
-        public UserService(IRepositories<Users> repositories, IMapper mapper) 
+        public UserService(IRepositories<Users> repositories, IMapper mapper, ITokenService tokenService) 
         {
             _userRepository = repositories;
+            _tokenService = tokenService;
             _mapper = mapper;
         }
 
@@ -45,10 +47,14 @@ namespace BusinessLogic.Services
             {
                 var userMap = _mapper.Map<Users>(loginDto);
 
+                var accessToken = _tokenService.CreateTokrn(userMap).AccessToken;
+
+                var refreshToken = _tokenService.CreateTokrn(userMap).RefreshToken;
+
                 var chekeVerify = await CheckUserAuthenticationAsync(loginDto);
 
                 if(chekeVerify)
-                    return new Result { Success = true, Message = "you are login" };
+                    return new Result { Success = true, Message = "you are login", AccessToken = accessToken, RefreshToken = refreshToken};
             }
 
             return new Result { Success = false, Message = "The password is incorrect" };
@@ -57,6 +63,10 @@ namespace BusinessLogic.Services
         public async Task<Result> RegisterUser(RegisterDto registerDto)
         {
             var userMap = _mapper.Map<Users>(registerDto);
+
+            var accessToken = _tokenService.CreateTokrn(userMap).AccessToken;
+
+            var refreshToken = _tokenService.CreateTokrn(userMap).RefreshToken;
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 

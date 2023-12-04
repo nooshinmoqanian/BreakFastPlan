@@ -7,5 +7,6 @@ namespace BusinessLogic.Validators
         public string Audience { get; set; } = string.Empty;
         public string KeyAccess { get; set; } = string.Empty;
         public string KeyRefresh { get; set; } = string.Empty;
+        public int AccessTokenExpirationMinutes { get; set; }
     }
 }
