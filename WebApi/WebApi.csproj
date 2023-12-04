@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="ActionFilter\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Middleware\" />
   </ItemGroup>
 

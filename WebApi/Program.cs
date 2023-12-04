@@ -1,6 +1,10 @@
+using BusinessLogic.Interfaces;
 using BusinessLogic.Mapping;
+using BusinessLogic.Services;
 using BusinessLogic.Validators;
 using DataAccess.DBContexts;
+using DataAccess.Models;
+using DataAccess.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,7 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<BreackFastContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BreackFastContext") ?? throw new InvalidOperationException("Connection string 'BreackFastContext' not found."), providerOptions => providerOptions.EnableRetryOnFailure()));
 // Add services to the container.
-
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRepositories<Users>, UserRepository>();
 //Mapper
 builder.Services.AddAutoMapper(typeof(UserProfile));
 //Authorization
