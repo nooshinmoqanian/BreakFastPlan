@@ -68,6 +68,8 @@ namespace BusinessLogic.Services
 
             userMap.Password = hashedPassword;
 
+            userMap.Token = Token.RefreshToken;
+            
             var resultRegister = await _userRepository.CreateAsync(userMap);
 
             if (resultRegister.Success == false)

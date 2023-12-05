@@ -8,6 +8,7 @@ namespace BusinessLogic.Interfaces
     {
         Result CreateToken(Users users);
         
-        Task<bool> UpdateToken();
+        Task<bool> UpdateToken(string username);
+
     }
 }

@@ -15,10 +15,13 @@ namespace WebApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ITokenService _tokenService;
 
-        public AuthController(IUserService userService) 
+        public AuthController(IUserService userService, ITokenService tokenService) 
         {
           _userService = userService;
+          _tokenService = tokenService;
+
         }
 
         [HttpPost("register")]
@@ -45,6 +48,11 @@ namespace WebApi.Controllers
                 return BadRequest(ModelState);
 
             var LoginResult = await _userService.LoginUser(loginDto);
+
+            var updateToken = await _tokenService.UpdateToken(loginDto.username);
+
+            if(!updateToken)
+                return BadRequest(ModelState);  
 
             if (LoginResult != null)
                 return Ok(LoginResult);

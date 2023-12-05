@@ -2,6 +2,7 @@
 using BusinessLogic.Interfaces;
 using BusinessLogic.Validators;
 using DataAccess.Models;
+using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -18,12 +19,15 @@ namespace BusinessLogic.Services
     {
         private readonly JwtSettings _jwtSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRepositories<Users> _userRepository;
 
 
-        public TokenService(JwtSettings jwtSettings, IHttpContextAccessor httpContextAccessor)
+
+        public TokenService(JwtSettings jwtSettings, IHttpContextAccessor httpContextAccessor, IRepositories<Users> userRepository)
         {
             _jwtSettings = jwtSettings;
             _httpContextAccessor = httpContextAccessor;
+            _userRepository = userRepository;
         }
 
         public Result CreateToken(Users users)
@@ -65,16 +69,37 @@ namespace BusinessLogic.Services
 
             string refresh = tokenHandler.WriteToken(refreshToken);
 
-            _httpContextAccessor.HttpContext.Items["RefreshToken"] = access;
+            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refresh;
 
-            _httpContextAccessor.HttpContext.Items["Authentication"] = refresh;
+            _httpContextAccessor.HttpContext.Items["Authentication"] = access;
 
             return new Result { Success = true, Message = "Tokens were created successfully", AccessToken = access, RefreshToken = refresh };
         }
 
-        public Task<bool> UpdateToken()
+        public async Task<bool> UpdateToken(string username)
         {
-            throw new NotImplementedException();
+            // دریافت کوکی رفرش توکن از درخواست
+            if (_httpContextAccessor.HttpContext.Request.Cookies.TryGetValue("RefreshToken", out string refreshToken))
+            {
+                // استخراج کاربر با استفاده از نام کاربری
+                var user = await _userRepository.GetByNameAsync(username);
+
+                // اگر کاربری وجود داشت
+                if (user != null)
+                {
+                    // به روز رسانی رفرش توکن در مدل کاربر
+                    user.Token = refreshToken;
+
+                    // به روزرسانی کاربر در دیتابیس
+                    await _userRepository.UpdateAsync(user);
+
+                    // بازگرداندن true به عنوان نتیجه موفقیت آمیز
+                    return true;
+                }
+            }
+
+            // در صورت عدم موفقیت در یافتن کوکی یا کاربر
+            return false;
         }
     }
 }
