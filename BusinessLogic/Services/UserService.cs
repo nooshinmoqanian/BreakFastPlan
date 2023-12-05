@@ -47,14 +47,12 @@ namespace BusinessLogic.Services
             {
                 var userMap = _mapper.Map<Users>(loginDto);
 
-                var accessToken = _tokenService.CreateTokrn(userMap).AccessToken;
-
-                var refreshToken = _tokenService.CreateTokrn(userMap).RefreshToken;
+                var Token = _tokenService.CreateToken(userMap);
 
                 var chekeVerify = await CheckUserAuthenticationAsync(loginDto);
 
                 if(chekeVerify)
-                    return new Result { Success = true, Message = "you are login", AccessToken = accessToken, RefreshToken = refreshToken};
+                    return new Result { Success = true, Message = "you are login", AccessToken = Token.AccessToken, RefreshToken = Token.RefreshToken };
             }
 
             return new Result { Success = false, Message = "The password is incorrect" };
@@ -64,9 +62,7 @@ namespace BusinessLogic.Services
         {
             var userMap = _mapper.Map<Users>(registerDto);
 
-            var accessToken = _tokenService.CreateTokrn(userMap).AccessToken;
-
-            var refreshToken = _tokenService.CreateTokrn(userMap).RefreshToken;
+            var Token = _tokenService.CreateToken(userMap);
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 
@@ -77,7 +73,7 @@ namespace BusinessLogic.Services
             if (resultRegister.Success == false)
                 return new Result { Success = resultRegister.Success, Message = "User Registration Not Successful." };
 
-            return new Result { Success = resultRegister.Success, Message = resultRegister.Message };
+            return new Result { Success = true, Message = "User Registration Successful", AccessToken = Token.AccessToken, RefreshToken = Token.RefreshToken };
         }
     }
 }

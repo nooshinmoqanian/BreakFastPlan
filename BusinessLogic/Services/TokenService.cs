@@ -2,6 +2,7 @@
 using BusinessLogic.Interfaces;
 using BusinessLogic.Validators;
 using DataAccess.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -16,12 +17,16 @@ namespace BusinessLogic.Services
     public class TokenService : ITokenService
     {
         private readonly JwtSettings _jwtSettings;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TokenService(JwtSettings jwtSettings)
+
+        public TokenService(JwtSettings jwtSettings, IHttpContextAccessor httpContextAccessor)
         {
             _jwtSettings = jwtSettings;
+            _httpContextAccessor = httpContextAccessor;
         }
-        public Result CreateTokrn(Users users)
+
+        public Result CreateToken(Users users)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
@@ -60,7 +65,16 @@ namespace BusinessLogic.Services
 
             string refresh = tokenHandler.WriteToken(refreshToken);
 
+            _httpContextAccessor.HttpContext.Items["RefreshToken"] = access;
+
+            _httpContextAccessor.HttpContext.Items["Authentication"] = refresh;
+
             return new Result { Success = true, Message = "Tokens were created successfully", AccessToken = access, RefreshToken = refresh };
+        }
+
+        public Task<bool> UpdateToken()
+        {
+            throw new NotImplementedException();
         }
     }
 }

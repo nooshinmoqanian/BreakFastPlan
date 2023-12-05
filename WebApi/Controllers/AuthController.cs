@@ -6,6 +6,7 @@ using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.ActionFilter;
 
 namespace WebApi.Controllers
 {
@@ -21,6 +22,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("register")]
+        [SetTokenCookie]
 
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
@@ -36,6 +38,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("login")]
+        [SetTokenCookie]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             if (!ModelState.IsValid)

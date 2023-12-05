@@ -6,6 +6,8 @@ namespace BusinessLogic.Interfaces
 {
     public interface ITokenService
     {
-        Result CreateTokrn(Users users);
+        Result CreateToken(Users users);
+        
+        Task<bool> UpdateToken();
     }
 }
