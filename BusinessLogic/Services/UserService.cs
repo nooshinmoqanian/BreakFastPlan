@@ -41,13 +41,19 @@ namespace BusinessLogic.Services
 
             return false;
         }
+
+        public Task<Users> GetUserById(int id)
+        {
+            return _userRepository.GetByIdAsync(id);
+        }
+
         public async Task<Result> LoginUser(LoginDto loginDto)
         {
             if (loginDto != null)
             {
                 var userMap = _mapper.Map<Users>(loginDto);
 
-                var Token = _tokenService.CreateToken(userMap);
+                var Token = _tokenService.CreateToken(loginDto.username);
 
                 var chekeVerify = await CheckUserAuthenticationAsync(loginDto);
 
@@ -62,7 +68,7 @@ namespace BusinessLogic.Services
         {
             var userMap = _mapper.Map<Users>(registerDto);
 
-            var Token = _tokenService.CreateToken(userMap);
+            var Token = _tokenService.CreateToken(userMap.Username);
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 

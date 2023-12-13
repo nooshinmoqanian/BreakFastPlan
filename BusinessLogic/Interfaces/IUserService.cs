@@ -10,5 +10,8 @@ namespace BusinessLogic.Interfaces
         Task<Result> RegisterUser(RegisterDto registerDto);
         Task<Result> LoginUser(LoginDto loginDto);
         Task<bool> CheckUserAuthenticationAsync(LoginDto loginDto);
+        Task<Users> GetUserById(int id);
+
+        
     }
 }

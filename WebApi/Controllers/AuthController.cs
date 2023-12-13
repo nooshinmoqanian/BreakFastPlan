@@ -3,9 +3,11 @@ using BusinessLogic.Interfaces;
 using BusinessLogic.Services;
 using DataAccess.Models;
 using DataAccess.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WebApi.ActionFilter;
 
 namespace WebApi.Controllers
@@ -17,16 +19,17 @@ namespace WebApi.Controllers
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
 
-        public AuthController(IUserService userService, ITokenService tokenService) 
+
+        public AuthController(IUserService userService, ITokenService tokenService)
         {
           _userService = userService;
           _tokenService = tokenService;
-
+          
         }
 
         [HttpPost("register")]
         [SetTokenCookie]
-
+       
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             if (!ModelState.IsValid)
@@ -49,15 +52,46 @@ namespace WebApi.Controllers
 
             var LoginResult = await _userService.LoginUser(loginDto);
 
-            var updateToken = await _tokenService.UpdateToken(loginDto.username);
+            var tokenUpdate = await _tokenService.UpdateToken(loginDto.username);
 
-            if(!updateToken)
-                return BadRequest(ModelState);  
+            if (tokenUpdate.Success == false)
+                return BadRequest(ModelState);
 
             if (LoginResult != null)
                 return Ok(LoginResult);
 
             return BadRequest(ModelState);
+        }
+        [HttpGet("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            if (HttpContext.Request.Cookies.TryGetValue("RefreshToken", out var refreshToken))
+            {
+                string cookieValue = refreshToken.ToString();
+
+                if (string.IsNullOrEmpty(cookieValue))
+                {
+                    return Unauthorized("you not loggin");
+                }
+
+                var findToken = await _tokenService.GetToken(cookieValue);
+
+                if(findToken == null) return Unauthorized("you not loggin");
+
+                var varify = await _tokenService.VerifyToken(cookieValue);
+                return Ok(varify);
+
+            }
+
+            return Unauthorized();
+
+        }
+
+            [HttpGet("test")]
+        [Authorize]
+        public string test()
+        {
+            return " nooshin gole golab";
         }
     }
 }

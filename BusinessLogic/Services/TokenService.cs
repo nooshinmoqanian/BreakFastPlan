@@ -4,14 +4,13 @@ using BusinessLogic.Validators;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
@@ -20,86 +19,101 @@ namespace BusinessLogic.Services
         private readonly JwtSettings _jwtSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRepositories<Users> _userRepository;
-
-
-
-        public TokenService(JwtSettings jwtSettings, IHttpContextAccessor httpContextAccessor, IRepositories<Users> userRepository)
+        
+        public TokenService(IOptionsSnapshot<JwtSettings> jwtSettings, IHttpContextAccessor httpContextAccessor, IRepositories<Users> userRepository)
         {
-            _jwtSettings = jwtSettings;
+            _jwtSettings = jwtSettings.Value;
             _httpContextAccessor = httpContextAccessor;
             _userRepository = userRepository;
         }
 
-        public Result CreateToken(Users users)
+        public Result CreateToken(string username)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var securityKeyAccess = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.KeyAccess));
+            var key = Encoding.ASCII.GetBytes(_jwtSettings.KeyAccess);
 
-           var securityKeyRefresh = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.KeyRefresh));
-
-           var credentials = new SigningCredentials(securityKeyAccess, SecurityAlgorithms.HmacSha256);
-
-           var credentialsRefresh = new SigningCredentials(securityKeyRefresh, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-            new Claim(JwtRegisteredClaimNames.Sub, users.Username),
-            new Claim(JwtRegisteredClaimNames.Email, users.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                Subject = new ClaimsIdentity(new Claim[]
+                    {
+            new Claim(ClaimTypes.Name, username)
+                    }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var accessToken = new JwtSecurityToken(
-                    issuer: _jwtSettings.Issuer,
-                    audience: _jwtSettings.Audience,
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
-                    signingCredentials: credentials
-                );
+            var tokenHandlerRefresh = new JwtSecurityTokenHandler();
 
-            var refreshToken = new JwtSecurityToken(
-                    issuer: _jwtSettings.Issuer,
-                    audience: _jwtSettings.Audience,
-                    claims: claims,
-                    expires: DateTime.Now.AddHours(1),
-                    signingCredentials: credentialsRefresh
-                );
+            var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
 
-            string access = tokenHandler.WriteToken(accessToken);
+            var tokenDescriptorRefresh = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                    {
+            new Claim(ClaimTypes.Name, username)
+                    }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyRefresh), SecurityAlgorithms.HmacSha256Signature)
+            };
 
-            string refresh = tokenHandler.WriteToken(refreshToken);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refresh;
+            var accessToken = tokenHandler.WriteToken(token);
 
-            _httpContextAccessor.HttpContext.Items["Authentication"] = access;
+            _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
 
-            return new Result { Success = true, Message = "Tokens were created successfully", AccessToken = access, RefreshToken = refresh };
+            var tokenRefresh = tokenHandlerRefresh.CreateToken(tokenDescriptorRefresh);
+
+            var refreshToken = tokenHandlerRefresh.WriteToken(tokenRefresh);
+
+            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refreshToken;
+
+            return new Result { Success = true, Message = " token create ", AccessToken = accessToken, RefreshToken = refreshToken };
         }
 
-        public async Task<bool> UpdateToken(string username)
+        public async Task<Users> GetToken(string token)
         {
-            // دریافت کوکی رفرش توکن از درخواست
-            if (_httpContextAccessor.HttpContext.Request.Cookies.TryGetValue("RefreshToken", out string refreshToken))
+            return await _userRepository.GetByTokenAsync(token);
+        }
+
+        public async Task<Result> UpdateToken(string username)
+        {
+            if (string.IsNullOrEmpty(username)) return new Result { Success = false, Message = "username cant be empty" };
+
+            if (_httpContextAccessor.HttpContext.Items.TryGetValue("RefreshToken", out var RefreshToken))
             {
-                // استخراج کاربر با استفاده از نام کاربری
-                var user = await _userRepository.GetByNameAsync(username);
+                var nameUser = await _userRepository.GetByNameAsync(username);
 
-                // اگر کاربری وجود داشت
-                if (user != null)
-                {
-                    // به روز رسانی رفرش توکن در مدل کاربر
-                    user.Token = refreshToken;
+                nameUser.Token = RefreshToken.ToString();
 
-                    // به روزرسانی کاربر در دیتابیس
-                    await _userRepository.UpdateAsync(user);
-
-                    // بازگرداندن true به عنوان نتیجه موفقیت آمیز
-                    return true;
-                }
+                var findUser = await _userRepository.UpdateAsync(nameUser);
             }
 
-            // در صورت عدم موفقیت در یافتن کوکی یا کاربر
-            return false;
+            return new Result { Success = true, Message = "Update Token Successful" };
+        }
+
+        public async Task<Users> VerifyToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
+
+            try
+            {
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(keyRefresh),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                }, out SecurityToken validatedToken);
+
+                return new Users { Username = "" };
+            }
+            catch
+            {
+                return new Users { };
+            }
         }
     }
-}
+} 
