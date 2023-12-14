@@ -28,48 +28,52 @@ namespace BusinessLogic.Services
         }
 
         public Result CreateToken(string username)
-        {
+        {    
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var key = Encoding.ASCII.GetBytes(_jwtSettings.KeyAccess);
+              string AccessToken()
+              {
+                  var key = Encoding.ASCII.GetBytes(_jwtSettings.KeyAccess);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
+                  var tokenDescriptor = new SecurityTokenDescriptor
+                  {
+                    Subject = new ClaimsIdentity(new Claim[]
                     {
-            new Claim(ClaimTypes.Name, username)
+                       new Claim(ClaimTypes.Name, username)
                     }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
+                    Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                  };
 
-            var tokenHandlerRefresh = new JwtSecurityTokenHandler();
+                  var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
+                  return tokenHandler.WriteToken(token);
+              }
 
-            var tokenDescriptorRefresh = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                    {
-            new Claim(ClaimTypes.Name, username)
-                    }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyRefresh), SecurityAlgorithms.HmacSha256Signature)
-            };
+             string RefreshToken()
+             {
+                var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenDescriptorRefresh = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new Claim[]
+                        {
+                          new Claim(ClaimTypes.Name, username)
+                        }),
+                    Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyRefresh), SecurityAlgorithms.HmacSha256Signature)
+                };
 
-            var accessToken = tokenHandler.WriteToken(token);
+                var tokenRefresh = tokenHandler.CreateToken(tokenDescriptorRefresh);
 
-            _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
+                return tokenHandler.WriteToken(tokenRefresh);
+             }
 
-            var tokenRefresh = tokenHandlerRefresh.CreateToken(tokenDescriptorRefresh);
+            _httpContextAccessor.HttpContext.Items["Authorization"] = AccessToken();
 
-            var refreshToken = tokenHandlerRefresh.WriteToken(tokenRefresh);
+            _httpContextAccessor.HttpContext.Items["RefreshToken"] = RefreshToken();
 
-            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refreshToken;
-
-            return new Result { Success = true, Message = " token create ", AccessToken = accessToken, RefreshToken = refreshToken };
+            return new Result { Success = true, Message = " token create ", AccessToken = AccessToken(), RefreshToken = RefreshToken() };
         }
 
         public async Task<Users> GetToken(string token)

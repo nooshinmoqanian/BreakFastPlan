@@ -71,23 +71,22 @@ namespace WebApi.Controllers
 
                 if (string.IsNullOrEmpty(cookieValue))
                 {
-                    return Unauthorized("you not loggin");
+                    return Unauthorized("You are not logged in");
                 }
 
                 var findToken = await _tokenService.GetToken(cookieValue);
 
-                if(findToken == null) return Unauthorized("you not loggin");
+                if(findToken == null) return Unauthorized("You are not logged in");
 
                 var varify = await _tokenService.VerifyToken(cookieValue);
                 return Ok(varify);
-
             }
 
             return Unauthorized();
 
         }
 
-            [HttpGet("test")]
+        [HttpGet("test")]
         [Authorize]
         public string test()
         {
