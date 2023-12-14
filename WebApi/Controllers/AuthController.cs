@@ -78,8 +78,13 @@ namespace WebApi.Controllers
 
                 if(findToken == null) return Unauthorized("You are not logged in");
 
-                var varify = await _tokenService.VerifyToken(cookieValue);
-                return Ok(varify);
+                var verify = await _tokenService.VerifyToken(cookieValue);
+
+                if (!verify) return Unauthorized("You are not logged in");
+
+               var createAccess =  _tokenService.GenerateAccessToken(findToken.Username);
+
+                return Ok(verify);
             }
 
             return Unauthorized();

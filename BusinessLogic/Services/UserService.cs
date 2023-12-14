@@ -53,12 +53,14 @@ namespace BusinessLogic.Services
             {
                 var userMap = _mapper.Map<Users>(loginDto);
 
-                var Token = _tokenService.CreateToken(loginDto.username);
+                var AccessToken = _tokenService.GenerateAccessToken(loginDto.username);
+
+                var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username);
 
                 var chekeVerify = await CheckUserAuthenticationAsync(loginDto);
 
                 if(chekeVerify)
-                    return new Result { Success = true, Message = "you are login", AccessToken = Token.AccessToken, RefreshToken = Token.RefreshToken };
+                    return new Result { Success = true, Message = "you are login", AccessToken = AccessToken, RefreshToken = RefreshToken };
             }
 
             return new Result { Success = false, Message = "The password is incorrect" };
@@ -68,20 +70,22 @@ namespace BusinessLogic.Services
         {
             var userMap = _mapper.Map<Users>(registerDto);
 
-            var Token = _tokenService.CreateToken(userMap.Username);
+            var AccessToken = _tokenService.GenerateAccessToken(registerDto.Username);
+
+            var RefreshToken = _tokenService.GenerateRefreshToken(registerDto.Username);
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 
             userMap.Password = hashedPassword;
 
-            userMap.Token = Token.RefreshToken;
+            userMap.Token = RefreshToken;
             
             var resultRegister = await _userRepository.CreateAsync(userMap);
 
             if (resultRegister.Success == false)
                 return new Result { Success = resultRegister.Success, Message = "User Registration Not Successful." };
 
-            return new Result { Success = true, Message = "User Registration Successful", AccessToken = Token.AccessToken, RefreshToken = Token.RefreshToken };
+            return new Result { Success = true, Message = "User Registration Successful", AccessToken = AccessToken, RefreshToken = RefreshToken };
         }
     }
 }

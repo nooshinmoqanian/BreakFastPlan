@@ -7,12 +7,14 @@ namespace BusinessLogic.Interfaces
 {
     public interface ITokenService
     {
-        Result CreateToken(string username);
+        string GenerateAccessToken(string username);
+
+        string GenerateRefreshToken(string username);
 
         Task <Result> UpdateToken(string username);
 
         Task<Users> GetToken(string token);
 
-        Task<Users> VerifyToken(string token);
+        Task<bool> VerifyToken(string token);
     }
 }

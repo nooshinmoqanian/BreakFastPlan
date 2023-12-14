@@ -26,57 +26,57 @@ namespace BusinessLogic.Services
             _httpContextAccessor = httpContextAccessor;
             _userRepository = userRepository;
         }
-
-        public Result CreateToken(string username)
-        {    
+        public string GenerateAccessToken(string username)
+        {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-              string AccessToken()
-              {
-                  var key = Encoding.ASCII.GetBytes(_jwtSettings.KeyAccess);
+                var key = Encoding.ASCII.GetBytes(_jwtSettings.KeyAccess);
 
-                  var tokenDescriptor = new SecurityTokenDescriptor
-                  {
-                    Subject = new ClaimsIdentity(new Claim[]
-                    {
-                       new Claim(ClaimTypes.Name, username)
-                    }),
-                    Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                  };
-
-                  var token = tokenHandler.CreateToken(tokenDescriptor);
-
-                  return tokenHandler.WriteToken(token);
-              }
-
-             string RefreshToken()
-             {
-                var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
-
-                var tokenDescriptorRefresh = new SecurityTokenDescriptor
+                var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(new Claim[]
-                        {
-                          new Claim(ClaimTypes.Name, username)
-                        }),
-                    Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyRefresh), SecurityAlgorithms.HmacSha256Signature)
+                  {
+                       new Claim(ClaimTypes.Name, username)
+                  }),
+                    Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
 
-                var tokenRefresh = tokenHandler.CreateToken(tokenDescriptorRefresh);
+                var token = tokenHandler.CreateToken(tokenDescriptor);
 
-                return tokenHandler.WriteToken(tokenRefresh);
-             }
+                 var accessToken = tokenHandler.WriteToken(token);
 
-            _httpContextAccessor.HttpContext.Items["Authorization"] = AccessToken();
+                _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
 
-            _httpContextAccessor.HttpContext.Items["RefreshToken"] = RefreshToken();
-
-            return new Result { Success = true, Message = " token create ", AccessToken = AccessToken(), RefreshToken = RefreshToken() };
+                return accessToken;
         }
 
-        public async Task<Users> GetToken(string token)
+        public string GenerateRefreshToken(string username)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
+
+            var tokenDescriptorRefresh = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                    {
+                          new Claim(ClaimTypes.Name, username)
+                    }),
+                Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyRefresh), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenRefresh = tokenHandler.CreateToken(tokenDescriptorRefresh);
+
+            var refreshToken = tokenHandler.WriteToken(tokenRefresh);
+        
+           _httpContextAccessor.HttpContext.Items["RefreshToken"] = refreshToken;
+
+            return refreshToken;
+        }
+
+    public async Task<Users> GetToken(string token)
         {
             return await _userRepository.GetByTokenAsync(token);
         }
@@ -97,7 +97,7 @@ namespace BusinessLogic.Services
             return new Result { Success = true, Message = "Update Token Successful" };
         }
 
-        public async Task<Users> VerifyToken(string token)
+        public async Task<bool> VerifyToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
@@ -112,11 +112,11 @@ namespace BusinessLogic.Services
                     ValidateAudience = false,
                 }, out SecurityToken validatedToken);
 
-                return new Users { Username = "" };
+                return true;
             }
             catch
             {
-                return new Users { };
+                return false;
             }
         }
     }
