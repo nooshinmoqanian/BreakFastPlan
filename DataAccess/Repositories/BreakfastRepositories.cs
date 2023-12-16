@@ -22,14 +22,14 @@ namespace DataAccess.Repositories
             var saveNewBreakfast = await _context.SaveChangesAsync();
 
             if (saveNewBreakfast > 0)
-                return new Result { Success = true, Message = "Registration was successful" };
+                return new Result { Success = true, Message = "Add was successful" };
 
-            return new Result { Success = false, Message = "Registration failed" };
+            return new Result { Success = false, Message = "this failed" };
         }
 
         public async Task<Result> DeleteAsync(int id)
         {
-            var findBreakfast = GetByIdAsync(id);
+            var findBreakfast = await GetByIdAsync(id);
 
             if (findBreakfast != null)
             {
