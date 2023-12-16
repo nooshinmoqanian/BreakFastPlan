@@ -12,9 +12,9 @@ namespace DataAccess.Repositories
 {
     public class UserRepository : IRepositories<Users>
     {
-        private readonly BreackFastContext _context;
+        private readonly BreakfastContext _context;
 
-        public UserRepository (BreackFastContext context)
+        public UserRepository (BreakfastContext context)
         {
             _context = context;
         }
