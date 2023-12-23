@@ -48,12 +48,9 @@ namespace DataAccess.Repositories
 
         public async Task<Tag> GetByNameAsync(string name)
         {
-            var findTagName =  await _context.Tags.SingleOrDefaultAsync(u => u.Name == name);
+            var findTagName =  await _context.Tags.FirstOrDefaultAsync(u => u.Name == name) ?? new Tag { Name = name };
 
-            if (findTagName != null)
-                return findTagName;
-
-            return new Tag { };                 
+            return findTagName;                 
         }
 
         public Task<Result> UpdateAsync(Tag entity)

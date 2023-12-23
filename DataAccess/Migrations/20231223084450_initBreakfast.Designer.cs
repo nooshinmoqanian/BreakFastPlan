@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(BreakfastContext))]
-    [Migration("20231215085606_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20231223084450_initBreakfast")]
+    partial class initBreakfast
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
