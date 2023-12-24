@@ -7,7 +7,6 @@ using BusinessLogic.Services;
 using BusinessLogic.Validators;
 
 using DataAccess.DBContexts;
-
 using DataAccess.Models;
 
 using DataAccess.Repositories;
@@ -27,8 +26,12 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"))
 builder.Services.AddSingleton(jwtSettings);
 
 
-builder.Services.AddDbContext<BreackFastContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BreackFastContext") ?? throw new InvalidOperationException("Connection string 'BreackFastContext' not found."), providerOptions => providerOptions.EnableRetryOnFailure()));
+builder.Services.AddDbContext<BreakfastContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BreakFastContext") ?? throw new InvalidOperationException("Connection string 'BreakFastContext' not found."), providerOptions => providerOptions.EnableRetryOnFailure()));
+
+///identity
+
+
 
 // Add services to the container.
 
@@ -36,7 +39,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IRepositories<Users>, UserRepository>();
 
+builder.Services.AddScoped<IRepositories<Breakfast>, BreakfastRepositories>();
+
+builder.Services.AddScoped<IRepositories<Tag>, BreakfastTagRepository>();
+
 builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddScoped<IBreakfastService, BreakfastService>();
 
 //Mapper
 
@@ -90,7 +99,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-
 
 // Configure the HTTP request pipeline.
 

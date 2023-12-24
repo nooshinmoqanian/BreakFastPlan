@@ -97,5 +97,11 @@ namespace WebApi.Controllers
         {
             return " nooshin gole golab";
         }
+        [HttpGet("admin")]
+        [Authorize(Roles = "Admin")]
+        public string admin()
+        {
+            return "admin wellcom";
+        }
     }
 }

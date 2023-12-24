@@ -18,8 +18,7 @@ namespace BusinessLogic.Services
     {
         private readonly JwtSettings _jwtSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IRepositories<Users> _userRepository;
-        
+        private readonly IRepositories<Users> _userRepository;        
         public TokenService(IOptionsSnapshot<JwtSettings> jwtSettings, IHttpContextAccessor httpContextAccessor, IRepositories<Users> userRepository)
         {
             _jwtSettings = jwtSettings.Value;

@@ -3,6 +3,8 @@ using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
 using DataAccess.Models;
 using DataAccess.Repositories;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -18,14 +20,15 @@ namespace BusinessLogic.Services
         private readonly IRepositories<Users> _userRepository;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
-        public UserService(IRepositories<Users> repositories, IMapper mapper, ITokenService tokenService) 
+      
+        public UserService(IRepositories<Users> repositories, IMapper mapper, ITokenService tokenService)
         {
             _userRepository = repositories;
             _tokenService = tokenService;
             _mapper = mapper;
         }
 
-        public async Task<bool> CheckUserAuthenticationAsync(LoginDto loginDto)
+        public async Task<AuthenticateResult> CheckUserAuthenticationAsync(LoginDto loginDto)
         {
             if (!string.IsNullOrEmpty(loginDto.username))
             {
@@ -35,7 +38,7 @@ namespace BusinessLogic.Services
                 {
                     var verifyPass = BCrypt.Net.BCrypt.Verify(loginDto.password, findUser.Password);
 
-                    return verifyPass;
+                    return new AuthenticateResult(true, "verify password successful") ;
                 }
             }
 

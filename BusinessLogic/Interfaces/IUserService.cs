@@ -1,7 +1,6 @@
-﻿
-
-using BusinessLogic.DTO;
+﻿using BusinessLogic.DTO;
 using DataAccess.Models;
+using Shared.Dto;
 
 namespace BusinessLogic.Interfaces
 {
@@ -9,9 +8,7 @@ namespace BusinessLogic.Interfaces
     {
         Task<Result> RegisterUser(RegisterDto registerDto);
         Task<Result> LoginUser(LoginDto loginDto);
-        Task<bool> CheckUserAuthenticationAsync(LoginDto loginDto);
+        Task<AuthenticationResult> CheckUserAuthenticationAsync(LoginDto loginDto);
         Task<Users> GetUserById(int id);
-
-        
     }
 }
