@@ -27,27 +27,11 @@ namespace BusinessLogic.Services
         }
         public string GenerateAccessToken(string username)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var accessToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes), _jwtSettings.KeyAccess);
 
-                var key = Encoding.ASCII.GetBytes(_jwtSettings.KeyAccess);
+            _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
 
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(new Claim[]
-                  {
-                       new Claim(ClaimTypes.Name, username)
-                  }),
-                    Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-
-                 var accessToken = tokenHandler.WriteToken(token);
-
-                _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
-
-                return accessToken;
+             return accessToken;
         }
 
         public string GenerateRefreshToken(string username)
