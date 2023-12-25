@@ -52,30 +52,35 @@ namespace BusinessLogic.Services
 
         public string GenerateRefreshToken(string username)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var keyRefresh = Encoding.ASCII.GetBytes(_jwtSettings.KeyRefresh);
-
-            var tokenDescriptorRefresh = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                    {
-                          new Claim(ClaimTypes.Name, username)
-                    }),
-                Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyRefresh), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var tokenRefresh = tokenHandler.CreateToken(tokenDescriptorRefresh);
-
-            var refreshToken = tokenHandler.WriteToken(tokenRefresh);
-        
+            var refreshToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationDays), _jwtSettings.KeyRefresh);
            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refreshToken;
 
             return refreshToken;
         }
 
-    public async Task<Users> GetToken(string token)
+        public string GenerateToken(string username, DateTime expiration, string key)
+        {
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var keyToken = Encoding.ASCII.GetBytes(key);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                    {
+                          new Claim(ClaimTypes.Name, username)
+                    }),
+                Expires = expiration,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyToken), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandlerResult = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(tokenHandlerResult);
+        }
+
+        public async Task<Users> GetToken(string token)
         {
             return await _userRepository.GetByTokenAsync(token);
         }

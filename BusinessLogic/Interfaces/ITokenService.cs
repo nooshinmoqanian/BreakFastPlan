@@ -7,6 +7,8 @@ namespace BusinessLogic.Interfaces
 {
     public interface ITokenService
     {
+        string GenerateToken(string username, DateTime expiration, string key);
+
         string GenerateAccessToken(string username);
 
         string GenerateRefreshToken(string username);

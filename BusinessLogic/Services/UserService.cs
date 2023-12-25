@@ -28,7 +28,7 @@ namespace BusinessLogic.Services
             _mapper = mapper;
         }
 
-        public async Task<AuthenticateResult> CheckUserAuthenticationAsync(LoginDto loginDto)
+        public async Task<bool> IsUserAuthenticatedAsync(LoginDto loginDto)
         {
             if (!string.IsNullOrEmpty(loginDto.username))
             {
@@ -38,7 +38,7 @@ namespace BusinessLogic.Services
                 {
                     var verifyPass = BCrypt.Net.BCrypt.Verify(loginDto.password, findUser.Password);
 
-                    return new AuthenticateResult(true, "verify password successful") ;
+                    return true;
                 }
             }
 
@@ -60,7 +60,7 @@ namespace BusinessLogic.Services
 
                 var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username);
 
-                var chekeVerify = await CheckUserAuthenticationAsync(loginDto);
+                var chekeVerify = await IsUserAuthenticatedAsync(loginDto);
 
                 if(chekeVerify)
                     return new Result { Success = true, Message = "you are login", AccessToken = AccessToken, RefreshToken = RefreshToken };
