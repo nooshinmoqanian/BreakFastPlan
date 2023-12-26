@@ -28,7 +28,6 @@ namespace BusinessLogic.Services
         public string GenerateAccessToken(string username)
         {
             var accessToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes), _jwtSettings.KeyAccess);
-
             _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
 
              return accessToken;
@@ -77,9 +76,13 @@ namespace BusinessLogic.Services
             {
                 var nameUser = await _userRepository.GetByNameAsync(username);
 
+                if(nameUser == null) return new Result { Success = false, Message = "User not found." };
+
                 nameUser.Token = RefreshToken.ToString();
 
-                var findUser = await _userRepository.UpdateAsync(nameUser);
+                var updateUser = await _userRepository.UpdateAsync(nameUser);
+
+                if(updateUser == null) return new Result { Success = false, Message = "Failed to update the user with new token." };
             }
 
             return new Result { Success = true, Message = "Update Token Successful" };
