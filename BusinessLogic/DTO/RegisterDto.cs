@@ -24,5 +24,8 @@ namespace BusinessLogic.DTO
         [Required(ErrorMessage = "email can not empty!")]
         [EmailAddress(ErrorMessage = "The email is not valid")]
         public string Email { get; set; } = string.Empty;
+
+
+        public string Role { get; set; } = "User";
     }
 }

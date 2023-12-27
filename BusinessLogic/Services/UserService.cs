@@ -3,15 +3,6 @@ using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
 using DataAccess.Models;
 using DataAccess.Repositories;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Services
 {
@@ -56,9 +47,9 @@ namespace BusinessLogic.Services
             {
                 var userMap = _mapper.Map<Users>(loginDto);
 
-                var AccessToken = _tokenService.GenerateAccessToken(loginDto.username);
+                var AccessToken = _tokenService.GenerateAccessToken(loginDto.username, loginDto.Role);
 
-                var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username);
+                var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username, loginDto.Role);
 
                 var chekeVerify = await IsUserAuthenticatedAsync(loginDto);
 
@@ -73,9 +64,9 @@ namespace BusinessLogic.Services
         {
             var userMap = _mapper.Map<Users>(registerDto);
 
-            var AccessToken = _tokenService.GenerateAccessToken(registerDto.Username);
+            var AccessToken = _tokenService.GenerateAccessToken(registerDto.Username, registerDto.Role);
 
-            var RefreshToken = _tokenService.GenerateRefreshToken(registerDto.Username);
+            var RefreshToken = _tokenService.GenerateRefreshToken(registerDto.Username, registerDto.Role);
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 

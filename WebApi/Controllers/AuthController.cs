@@ -19,7 +19,6 @@ namespace WebApi.Controllers
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
 
-
         public AuthController(IUserService userService, ITokenService tokenService)
         {
           _userService = userService;
@@ -29,7 +28,6 @@ namespace WebApi.Controllers
 
         [HttpPost("register")]
         [SetTokenCookie]
-       
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             if (!ModelState.IsValid)
@@ -62,6 +60,7 @@ namespace WebApi.Controllers
 
             return BadRequest(ModelState);
         }
+
         [HttpGet("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
@@ -82,7 +81,7 @@ namespace WebApi.Controllers
 
                 if (!verify) return Unauthorized("You are not logged in");
 
-               var createAccess =  _tokenService.GenerateAccessToken(findToken.Username);
+               var createAccess =  _tokenService.GenerateAccessToken(findToken.Username, findToken.Role);
 
                 return Ok(verify);
             }

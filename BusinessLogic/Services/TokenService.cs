@@ -4,8 +4,6 @@ using BusinessLogic.Validators;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,23 +23,23 @@ namespace BusinessLogic.Services
             _httpContextAccessor = httpContextAccessor;
             _userRepository = userRepository;
         }
-        public string GenerateAccessToken(string username)
+        public string GenerateAccessToken(string username, string role)
         {
-            var accessToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes), _jwtSettings.KeyAccess);
+            var accessToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes), _jwtSettings.KeyAccess, role);
             _httpContextAccessor.HttpContext.Items["Authorization"] = accessToken;
 
              return accessToken;
         }
 
-        public string GenerateRefreshToken(string username)
+        public string GenerateRefreshToken(string username, string role)
         {
-            var refreshToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationDays), _jwtSettings.KeyRefresh);
+            var refreshToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationDays), _jwtSettings.KeyRefresh, role);
            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refreshToken;
 
             return refreshToken;
         }
 
-        public string GenerateToken(string username, DateTime expiration, string key)
+        public string GenerateToken(string username, DateTime expiration, string key, string role)
         {
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -52,7 +50,9 @@ namespace BusinessLogic.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                     {
-                          new Claim(ClaimTypes.Name, username)
+                          new Claim(ClaimTypes.Name, username),
+                          new Claim(ClaimTypes.Role, role),
+
                     }),
                 Expires = expiration,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyToken), SecurityAlgorithms.HmacSha256Signature)
