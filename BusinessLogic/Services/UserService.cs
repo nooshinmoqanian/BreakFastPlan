@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
+using BusinessLogic.Validators;
 using DataAccess.Models;
 using DataAccess.Repositories;
 
@@ -10,13 +11,17 @@ namespace BusinessLogic.Services
     {
         private readonly IRepositories<Users> _userRepository;
         private readonly ITokenService _tokenService;
+        private readonly IRoleService _roleService;
         private readonly IMapper _mapper;
-      
-        public UserService(IRepositories<Users> repositories, IMapper mapper, ITokenService tokenService)
+        private readonly JwtSettings _jwtSettings;
+
+        public UserService(IRepositories<Users> repositories, IMapper mapper, ITokenService tokenService, IRoleService roleService, JwtSettings jwtSettings)
         {
             _userRepository = repositories;
             _tokenService = tokenService;
             _mapper = mapper;
+            _roleService = roleService;
+            _jwtSettings = jwtSettings;
         }
 
         public async Task<bool> IsUserAuthenticatedAsync(LoginDto loginDto)
@@ -47,11 +52,16 @@ namespace BusinessLogic.Services
             {
                 var userMap = _mapper.Map<Users>(loginDto);
 
-                var AccessToken = _tokenService.GenerateAccessToken(loginDto.username, loginDto.Role);
-
-                var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username, loginDto.Role);
-
                 var chekeVerify = await IsUserAuthenticatedAsync(loginDto);
+
+                var findUser = await _userRepository.GetByNameAsync(loginDto.username);
+
+                var getRole = _roleService.GetRoleFromToken(findUser.Token, _jwtSettings.KeyRefresh);
+
+                var AccessToken = _tokenService.GenerateAccessToken(loginDto.username, getRole);
+
+                var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username, getRole);
+                
 
                 if(chekeVerify)
                     return new Result { Success = true, Message = "you are login", AccessToken = AccessToken, RefreshToken = RefreshToken };
@@ -64,9 +74,9 @@ namespace BusinessLogic.Services
         {
             var userMap = _mapper.Map<Users>(registerDto);
 
-            var AccessToken = _tokenService.GenerateAccessToken(registerDto.Username, registerDto.Role);
+            var AccessToken = _tokenService.GenerateAccessToken(registerDto.Username, "User");
 
-            var RefreshToken = _tokenService.GenerateRefreshToken(registerDto.Username, registerDto.Role);
+            var RefreshToken = _tokenService.GenerateRefreshToken(registerDto.Username, "User");
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 

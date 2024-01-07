@@ -1,13 +1,8 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
-using BusinessLogic.Services;
-using DataAccess.Models;
-using DataAccess.Repositories;
+using BusinessLogic.Validators;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using WebApi.ActionFilter;
 
 namespace WebApi.Controllers
@@ -18,12 +13,15 @@ namespace WebApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        
+        private readonly JwtSettings _jwtSettings;
 
-        public AuthController(IUserService userService, ITokenService tokenService)
+        public AuthController(IUserService userService, ITokenService tokenService, JwtSettings jwtSettings)
         {
           _userService = userService;
           _tokenService = tokenService;
           
+          _jwtSettings = jwtSettings;
         }
 
         [HttpPost("register")]
@@ -51,6 +49,8 @@ namespace WebApi.Controllers
             var LoginResult = await _userService.LoginUser(loginDto);
 
             var tokenUpdate = await _tokenService.UpdateToken(loginDto.username);
+
+          
 
             if (tokenUpdate.Success == false)
                 return BadRequest(ModelState);
@@ -81,7 +81,7 @@ namespace WebApi.Controllers
 
                 if (!verify) return Unauthorized("You are not logged in");
 
-               var createAccess =  _tokenService.GenerateAccessToken(findToken.Username, findToken.Role);
+                var createAccess =  _tokenService.GenerateAccessToken(findToken.Username, findToken.Role);
 
                 return Ok(verify);
             }
@@ -96,6 +96,7 @@ namespace WebApi.Controllers
         {
             return " nooshin gole golab";
         }
+
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         public string admin()

@@ -47,6 +47,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddScoped<IBreakfastService, BreakfastService>();
 
+builder.Services.AddScoped<IRoleService, RoleService>();
+
 //Mapper
 
 builder.Services.AddAutoMapper(typeof(UserProfile));

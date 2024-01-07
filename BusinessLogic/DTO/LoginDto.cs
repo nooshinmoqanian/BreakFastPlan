@@ -16,7 +16,6 @@ namespace BusinessLogic.DTO
         [Required(ErrorMessage = "password can not empty!")]
         [StringLength(20, MinimumLength = 8, ErrorMessage = "The password must be more than 8 characters and less than 30 characters")]
         public string password { get; set; } = string.Empty;
-        public string Role { get; set; } = "User";
     }
 
 }
