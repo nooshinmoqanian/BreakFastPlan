@@ -1,7 +1,6 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
-using DataAccess.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
@@ -18,17 +17,44 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("all-breakfast")]
-        public async Task <IEnumerable<Breakfast>> GetAll() 
+        public async Task<IEnumerable<BreakfastDetailDto>> GetAll()
         {
             return await _breakfastService.GetBreakfastList();
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
+        {
+            var breakfast = await _breakfastService.GetBreakfast(id);
+
+            if (breakfast == null) return NotFound();
+
+            return Ok(breakfast);
+        }
+
         [HttpPost("add-breakfast")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddBreakfast(BreakfastListDto breakfastList)
         {
-            if(ModelState.IsValid)
-              return Ok( await _breakfastService.AddBreakfast(breakfastList) );
+            return Ok(await _breakfastService.AddBreakfast(breakfastList));
+        }
 
-            return BadRequest(ModelState);
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Update(int id, BreakfastListDto breakfastList)
+        {
+            if (await _breakfastService.UpdateBreakfast(id, breakfastList)) return NoContent();
+
+            return NotFound();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (await _breakfastService.DeleteBreakfast(id)) return NoContent();
+
+            return NotFound();
         }
     }
 }

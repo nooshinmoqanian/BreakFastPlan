@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +26,7 @@ builder.Services.AddSingleton(jwtSettings);
 
 
 builder.Services.AddDbContext<BreakfastContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BreakFastContext") ?? throw new InvalidOperationException("Connection string 'BreakFastContext' not found."), providerOptions => providerOptions.EnableRetryOnFailure()));
+    options.UseMySql(builder.Configuration.GetConnectionString("BreakFastContext") ?? throw new InvalidOperationException("Connection string 'BreakFastContext' not found."), new MySqlServerVersion(new Version(8, 0, 36))));
 
 ///identity
 
@@ -48,6 +47,20 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IBreakfastService, BreakfastService>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
+
+builder.Services.AddScoped<IRepositories<Restaurant>, RestaurantRepository>();
+
+builder.Services.AddScoped<IRepositories<Order>, OrderRepository>();
+
+builder.Services.AddScoped<IRestaurantService, RestaurantService>();
+
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+builder.Services.AddScoped<IRepositories<WeeklyPlanItem>, PlanRepository>();
+
+builder.Services.AddScoped<IPlanService, PlanService>();
+
+builder.Services.AddScoped<DataSeeder>();
 
 //Mapper
 
@@ -102,7 +115,19 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<DataSeeder>().SeedAsync(builder.Configuration);
+}
+
 // Configure the HTTP request pipeline.
+
+app.UseExceptionHandler(error => error.Run(async context =>
+{
+    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+    await context.Response.WriteAsJsonAsync(new { message = "خطایی در سرور رخ داد؛ دوباره تلاش کنید" });
+}));
 
 if (app.Environment.IsDevelopment())
 
