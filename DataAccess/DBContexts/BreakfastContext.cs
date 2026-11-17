@@ -1,4 +1,4 @@
-﻿using DataAccess.Models;
+using DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.DBContexts
@@ -10,6 +10,12 @@ namespace DataAccess.DBContexts
         public DbSet<Tag> Tags { get; set; }
         public DbSet<Users> User { get; set; }
         public DbSet<BreakfastTag> BreakfastTags { get; set; }
+        public DbSet<BreakfastIngredient> BreakfastIngredients { get; set; }
+        public DbSet<BreakfastHealthInfo> BreakfastHealthInfos { get; set; }
+        public DbSet<Restaurant> Restaurants { get; set; }
+        public DbSet<RestaurantBreakfast> RestaurantBreakfasts { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<WeeklyPlanItem> WeeklyPlanItems { get; set; }
 
         public BreakfastContext(DbContextOptions<BreakfastContext> options)
             : base(options)
@@ -30,6 +36,13 @@ namespace DataAccess.DBContexts
                 .HasOne(bt => bt.Tag)
                 .WithMany(t => t.BreakfastTags)
                 .HasForeignKey(bt => bt.TagId);
+
+            modelBuilder.Entity<RestaurantBreakfast>()
+                .HasKey(rb => new { rb.RestaurantId, rb.BreakfastId });
+
+            modelBuilder.Entity<WeeklyPlanItem>()
+                .HasIndex(p => new { p.Username, p.Day })
+                .IsUnique();
         }
     }
 

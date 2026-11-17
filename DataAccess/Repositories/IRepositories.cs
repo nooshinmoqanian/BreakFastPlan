@@ -1,4 +1,4 @@
-﻿using Shared.DTO;
+using Shared.DTO;
 
 namespace DataAccess.Repositories
 {
@@ -11,6 +11,10 @@ namespace DataAccess.Repositories
         Task<Result> UpdateAsync(T entity);
         Task<Result> DeleteAsync(int id);
         Task<T> GetByTokenAsync(string token)
+        {
+            throw new NotImplementedException();
+        }
+        Task<IEnumerable<T>> GetByUsernameAsync(string username)
         {
             throw new NotImplementedException();
         }

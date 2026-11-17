@@ -1,4 +1,4 @@
-﻿using DataAccess.DBContexts;
+using DataAccess.DBContexts;
 using DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Shared.DTO;
@@ -31,7 +31,7 @@ namespace DataAccess.Repositories
         {
             var findBreakfast = await GetByIdAsync(id);
 
-            if (findBreakfast != null)
+            if (findBreakfast.Id != 0)
             {
                 _context.Remove(findBreakfast);
 
@@ -45,12 +45,12 @@ namespace DataAccess.Repositories
 
         public async Task<IEnumerable<Breakfast>> GetAllAsync()
         {
-            return await _context.Breakfasts.ToListAsync();
+            return await WithDetails().ToListAsync();
         }
 
         public async Task<Breakfast> GetByIdAsync(int id)
         {
-            var breakfast = await _context.Breakfasts.FindAsync(id);
+            var breakfast = await WithDetails().SingleOrDefaultAsync(b => b.Id == id);
 
             if (breakfast == null)
                 return new Breakfast { };
@@ -71,14 +71,19 @@ namespace DataAccess.Repositories
 
         public async Task<Result> UpdateAsync(Breakfast entity)
         {
-            _context.Breakfasts.Update(entity);
+            await _context.SaveChangesAsync();
 
-            var updateUser = await _context.SaveChangesAsync();
+            return new Result { Success = true, Message = "Update was successful" };
+        }
 
-            if (updateUser > 0)
-                return new Result { Success = true, Message = "Update was successful" };
-
-            return new Result { Success = false, Message = "Update failed" };
+        private IQueryable<Breakfast> WithDetails()
+        {
+            return _context.Breakfasts
+                .Include(b => b.Ingredients)
+                .Include(b => b.HealthInfos)
+                .Include(b => b.BreakfastTags).ThenInclude(bt => bt.Tag)
+                .Include(b => b.RestaurantBreakfasts).ThenInclude(rb => rb.Restaurant)
+                .AsSplitQuery();
         }
     }
 }
