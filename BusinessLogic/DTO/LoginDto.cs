@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -9,12 +9,12 @@ namespace BusinessLogic.DTO
 {
     public class LoginDto
     {
-        [StringLength(25, MinimumLength = 3, ErrorMessage = " username must be more than 2 characters and less than 25 characters")]
-        [Required(ErrorMessage = "username can not empty!")]
+        [StringLength(25, MinimumLength = 3, ErrorMessage = "نام کاربری باید بین ۳ تا ۲۵ حرف باشد")]
+        [Required(ErrorMessage = "نام کاربری را وارد کنید")]
         public string username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "password can not empty!")]
-        [StringLength(20, MinimumLength = 8, ErrorMessage = "The password must be more than 8 characters and less than 30 characters")]
+        [Required(ErrorMessage = "رمز عبور را وارد کنید")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "رمز عبور باید بین ۸ تا ۲۰ حرف باشد")]
         public string password { get; set; } = string.Empty;
     }
 

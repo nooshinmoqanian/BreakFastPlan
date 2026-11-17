@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Validators;
@@ -30,11 +30,9 @@ namespace BusinessLogic.Services
             {
                 var findUser = await _userRepository.GetByNameAsync(loginDto.username);
 
-                if (findUser != null && !string.IsNullOrEmpty(loginDto.password))
+                if (findUser.Id != 0 && !string.IsNullOrEmpty(loginDto.password))
                 {
-                    var verifyPass = BCrypt.Net.BCrypt.Verify(loginDto.password, findUser.Password);
-
-                    return true;
+                    return BCrypt.Net.BCrypt.Verify(loginDto.password, findUser.Password);
                 }
             }
 
@@ -50,28 +48,30 @@ namespace BusinessLogic.Services
         {
             if (loginDto != null)
             {
-                var userMap = _mapper.Map<Users>(loginDto);
-
                 var chekeVerify = await IsUserAuthenticatedAsync(loginDto);
 
-                var findUser = await _userRepository.GetByNameAsync(loginDto.username);
+                if (chekeVerify)
+                {
+                    var findUser = await _userRepository.GetByNameAsync(loginDto.username);
 
-                var getRole = _roleService.GetRoleFromToken(findUser.Token, _jwtSettings.KeyRefresh);
+                    var AccessToken = _tokenService.GenerateAccessToken(loginDto.username, findUser.Role);
 
-                var AccessToken = _tokenService.GenerateAccessToken(loginDto.username, getRole);
+                    var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username, findUser.Role);
 
-                var RefreshToken = _tokenService.GenerateRefreshToken(loginDto.username, getRole);
-                
-
-                if(chekeVerify)
                     return new Result { Success = true, Message = "you are login", AccessToken = AccessToken, RefreshToken = RefreshToken };
+                }
             }
 
-            return new Result { Success = false, Message = "The password is incorrect" };
+            return new Result { Success = false, Message = "نام کاربری یا رمز عبور اشتباه است" };
         }
 
         public async Task<Result> RegisterUser(RegisterDto registerDto)
         {
+            var existingUser = await _userRepository.GetByNameAsync(registerDto.Username);
+
+            if (existingUser.Id != 0)
+                return new Result { Success = false, Message = "این نام کاربری قبلاً ثبت شده است" };
+
             var userMap = _mapper.Map<Users>(registerDto);
 
             var AccessToken = _tokenService.GenerateAccessToken(registerDto.Username, "User");
@@ -83,11 +83,11 @@ namespace BusinessLogic.Services
             userMap.Password = hashedPassword;
 
             userMap.Token = RefreshToken;
-            
+
             var resultRegister = await _userRepository.CreateAsync(userMap);
 
             if (resultRegister.Success == false)
-                return new Result { Success = resultRegister.Success, Message = "User Registration Not Successful." };
+                return new Result { Success = resultRegister.Success, Message = "ثبت‌نام انجام نشد" };
 
             return new Result { Success = true, Message = "User Registration Successful", AccessToken = AccessToken, RefreshToken = RefreshToken };
         }

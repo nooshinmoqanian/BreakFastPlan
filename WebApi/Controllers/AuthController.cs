@@ -1,4 +1,4 @@
-﻿using BusinessLogic.DTO;
+using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Validators;
 using Microsoft.AspNetCore.Authorization;
@@ -13,14 +13,14 @@ namespace WebApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
-        
+
         private readonly JwtSettings _jwtSettings;
 
         public AuthController(IUserService userService, ITokenService tokenService, JwtSettings jwtSettings)
         {
           _userService = userService;
           _tokenService = tokenService;
-          
+
           _jwtSettings = jwtSettings;
         }
 
@@ -33,10 +33,10 @@ namespace WebApi.Controllers
 
             var registrationResult = await _userService.RegisterUser(registerDto);
 
-            if (registrationResult != null)
+            if (registrationResult.Success)
                 return Ok(registrationResult);
 
-            return BadRequest(ModelState);
+            return BadRequest(registrationResult);
         }
 
         [HttpPost("login")]
@@ -48,17 +48,15 @@ namespace WebApi.Controllers
 
             var LoginResult = await _userService.LoginUser(loginDto);
 
-            var tokenUpdate = await _tokenService.UpdateToken(loginDto.username);
+            if (LoginResult.Success == false)
+                return Unauthorized(LoginResult);
 
-          
+            var tokenUpdate = await _tokenService.UpdateToken(loginDto.username);
 
             if (tokenUpdate.Success == false)
                 return BadRequest(ModelState);
 
-            if (LoginResult != null)
-                return Ok(LoginResult);
-
-            return BadRequest(ModelState);
+            return Ok(LoginResult);
         }
 
         [HttpGet("refresh-token")]
@@ -91,7 +89,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("test")]
-        [Authorize]
+
         public string test()
         {
             return " nooshin gole golab";
@@ -103,5 +101,7 @@ namespace WebApi.Controllers
         {
             return "admin wellcom";
         }
+
+
     }
 }

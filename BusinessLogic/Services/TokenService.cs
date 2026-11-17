@@ -1,4 +1,4 @@
-﻿using BusinessLogic.DTO;
+using BusinessLogic.DTO;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Validators;
 using DataAccess.Models;
@@ -33,7 +33,7 @@ namespace BusinessLogic.Services
 
         public string GenerateRefreshToken(string username, string role)
         {
-            var refreshToken = GenerateToken(username, DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationDays), _jwtSettings.KeyRefresh, role);
+            var refreshToken = GenerateToken(username, DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays), _jwtSettings.KeyRefresh, role);
            _httpContextAccessor.HttpContext.Items["RefreshToken"] = refreshToken;
 
             return refreshToken;
