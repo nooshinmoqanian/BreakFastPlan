@@ -1,95 +1,70 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { api, money } from '@/lib/api'
 
 export default function Home() {
+  const router = useRouter()
+  const [breakfasts, setBreakfasts] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState<'diet' | 'newest'>('newest')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!localStorage.getItem('seenWelcome')) return router.replace('/welcome')
+
+    api('/BreakfastItems/all-breakfast').then(setBreakfasts).catch((e) => setError(e.message))
+  }, [router])
+
+  const found = breakfasts.filter((b) => b.name.includes(search))
+
+  const shown = category === 'diet'
+    ? found.filter((b) => b.tagNames.some((t: any) => t.name === 'رژیمی'))
+    : [...found].sort((a, b) => b.id - a.id)
+
+  const lowCalorie = [...found].sort((a, b) => a.totalCalories - b.totalCalories).slice(0, 3)
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <>
+      <h1>صبحانه‌ات را<br />پیدا کن</h1>
+      {error && <p className="error">{error}</p>}
+
+      <div className="search">
+        <input placeholder="صبحانه‌ات را جست‌وجو کن" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <h2>دسته‌بندی</h2>
+      <div className="chips">
+        <button className={category === 'diet' ? 'on' : ''} onClick={() => setCategory('diet')}>رژیمی</button>
+        <button className={category === 'newest' ? 'on' : ''} onClick={() => setCategory('newest')}>جدیدترین</button>
       </div>
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      <div className="grid">
+        {shown.map((b) => (
+          <Link className="food" href={`/breakfast/${b.id}`} key={b.id}>
+            <span className="plate">🥞</span>
+            <span className="row">
+              <span>{b.name}</span>
+              <span className="price">{money(b.ingredientsPrice)}</span>
+            </span>
+          </Link>
+        ))}
       </div>
-    </main>
+      {shown.length === 0 && !error && <p className="muted">صبحانه‌ای پیدا نشد.</p>}
+
+      <h2>کم‌کالری‌ترین‌ها</h2>
+      {lowCalorie.map((b) => (
+        <Link className="list-item" href={`/breakfast/${b.id}`} key={b.id}>
+          <span className="emoji">🥞</span>
+          <span>
+            <strong>{b.name}</strong>
+            <br />
+            <span className="muted">{b.totalCalories} کالری</span>
+          </span>
+        </Link>
+      ))}
+    </>
   )
 }
